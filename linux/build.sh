@@ -18,5 +18,5 @@ for name in BouncyCastle-MIT PDFsharp-MIT SharpCompress-MIT ZXing-Apache-2.0 Pdf
 done
 chmod +x "$publish/Nashi" "$publish/install.sh"
 tar -C "$(dirname "$publish")" -czf "$root/build/Nashi-$rid.tar.gz" Nashi
-sha256sum "$root/build/Nashi-$rid.tar.gz" > "$root/build/Nashi-$rid.tar.gz.sha256"
+(cd "$root/build" && sha256sum "Nashi-$rid.tar.gz") > "$root/build/Nashi-$rid.tar.gz.sha256"
 echo "Built $root/build/Nashi-$rid.tar.gz"
