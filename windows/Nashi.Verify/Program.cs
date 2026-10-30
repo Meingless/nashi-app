@@ -35,6 +35,14 @@ try
         catch (InvalidDataException) { checks++; }
     }
     Check(SafePaths.ArchiveEntry(root, "folder/file.txt") == Path.Combine(root, "folder", "file.txt"), "Valid nested path failed");
+    Check(SafePaths.SafeStem("Başlık: Alt\\başlık/son\0") == "Başlık_ Alt_başlık_son_", "Derived filename stem retained path syntax");
+    Check(SafePaths.SafeStem("Türkçe 🍐") == "Türkçe 🍐", "Safe filename stem lost Unicode");
+    Check(SafePaths.SafeStem("") == "Export", "Empty filename stem needs a usable fallback");
+    foreach (var name in new[] { "../escape.txt", @"..\escape.txt", "name:stream.txt", "nul\0.txt" })
+    {
+        try { SafePaths.Unique(root, name); throw new Exception("Unsafe explicit output name accepted"); }
+        catch (ArgumentException) { checks++; }
+    }
     File.WriteAllText(Path.Combine(root, "Output.txt"), "keep");
     using (var transaction = new ExportTransaction(root))
     {

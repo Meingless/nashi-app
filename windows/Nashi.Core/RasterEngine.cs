@@ -54,7 +54,7 @@ public static class RasterEngine
             }
             else
             {
-                var output=SafePaths.Unique(tx.StagingDirectory,Path.GetFileNameWithoutExtension(inputs[index])+" Export."+format);
+                var output=SafePaths.Unique(tx.StagingDirectory,SafePaths.SafeStem(Path.GetFileNameWithoutExtension(inputs[index]))+" Export."+format);
                 image.Quality=(uint)options.Quality;image.Write(output,PhotoCodec.Format(format));outputs.Add(output);
             }
             progress?.Report(new((index+1d)/inputs.Count*.98,"Processing images…"));

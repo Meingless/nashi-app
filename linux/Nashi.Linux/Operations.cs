@@ -102,7 +102,7 @@ public static class Operations
                 if(FeatureCatalog.Extension(input) is "srt" or "vtt")
                 {
                     if(new FileInfo(input).Length>20_000_000)throw new InvalidDataException("Subtitle exceeds 20 MB.");
-                    var output=SafePaths.Unique(tx.StagingDirectory,Path.GetFileNameWithoutExtension(input)+"."+options.Format);
+                    var output=SafePaths.Unique(tx.StagingDirectory,SafePaths.SafeStem(Path.GetFileNameWithoutExtension(input))+"."+options.Format);
                     await File.WriteAllTextAsync(output,SubtitleCodec.Convert(await File.ReadAllTextAsync(input,token),options.Format),token);outputs.Add(output);
                 }
                 else

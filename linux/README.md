@@ -65,6 +65,20 @@ Ubuntu/Debian: `sudo apt install ffmpeg libreoffice` (plus yt-dlp/Deno if wanted
 Arch/CachyOS: `sudo pacman -S ffmpeg libreoffice-fresh yt-dlp deno`.
 Package availability and yt-dlp freshness vary by distribution.
 
+## Merge coordination
+
+[The maintainer selected PR #63 as the single Linux desktop candidate](https://github.com/orkunisitmak/nashi-app/pull/63#issuecomment-6478309118)
+with contributions from the overlapping #31 port. The agreed order is to merge
+[#46](https://github.com/orkunisitmak/nashi-app/pull/46) first, then rebase this
+port and reconcile `windows/Nashi.Core/Toolchain.cs` and
+`.github/workflows/linux.yml`. The default must be #46's pinned,
+SHA-256-verified tool setup; a system-tool fallback is optional.
+
+That integration is still pending. The distribution-tool instructions above
+describe this pre-rebase branch, not the final default policy. Do not discard
+#46's download/verification coverage when combining the Linux workflows, or
+claim pinned-package support for ARM64 without implementing and testing it.
+
 ## Included features and differences
 
 Only implemented operations are offered. This is an initial usable port, not
@@ -110,3 +124,19 @@ physical pointer/drag interaction test, portal permissions or full Wayland parit
 The engine suite covers dimensions/pixels, codecs, PDF pages, Unicode, archive
 traversal/links, cancelled child processes, case-sensitive paths, collision-safe
 names, unchanged originals and failed-batch rollback. CI runs both suites.
+
+### Baseline regression comparison
+
+On 2026-10-29, the same `windows/Nashi.Verify` commands were run against the
+original base `295c74f79f0313e89ad1542fe39e8fd4c64c88b2` and PR head
+`bd13261019135461247add0f8ffbe793bbdc0f7e` in separate clean worktrees on
+Debian 13 x64, .NET SDK 10.0.403, with system FFmpeg 7.1.5:
+
+| Shared-engine suite | Base `295c74f` | PR `bd13261` |
+| --- | ---: | ---: |
+| Without optional media tools | 1,272 passed | 1,272 passed |
+| With explicit FFmpeg/ffprobe paths | 1,327 passed | 1,327 passed |
+
+No regression was observed in these shared-engine suites. This is not a native
+Windows/macOS/ARM64 test, nor a comparison against the eventual #46 merge base.
+The post-#46 rebase must rerun both the shared-engine and Linux-specific suites.

@@ -21,6 +21,15 @@ public static class SafePaths
         return destination;
     }
 
+    /// Sanitizes a derived filename stem, not a path. Keep Unique's path rejection
+    /// intact for callers accepting an explicit output filename.
+    public static string SafeStem(string stem)
+    {
+        ArgumentNullException.ThrowIfNull(stem);
+        var safe = string.Concat(stem.Select(c => c is ':' or '\\' or '/' or '\0' ? '_' : c));
+        return safe.Length == 0 ? "Export" : safe;
+    }
+
     public static string Unique(string directory, string filename)
     {
         if (Path.GetFileName(filename) != filename || filename.IndexOfAny(['/', '\\', ':', '\0']) >= 0)

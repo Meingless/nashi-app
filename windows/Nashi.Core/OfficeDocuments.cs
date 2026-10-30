@@ -28,7 +28,7 @@ public sealed partial class OfficeDocuments(string office,string deno,string ass
             if(ext=="html"&&format is "xlsx" or "ods" or "csv" or "tsv")args.Add("--infilter=HTML (StarCalc)");
             if(ext=="pdf"&&format=="pptx")args.Add("--infilter=impress_pdf_import");
             args.AddRange(["--convert-to",filter,"--outdir",rendered,Path.GetFullPath(input)]);var result=await ProcessRunner.RunAsync(office,args,token);
-            var output=Path.Combine(rendered,Path.GetFileNameWithoutExtension(input)+"."+(format=="tsv"?"csv":format));if(!File.Exists(output)||new FileInfo(output).Length==0)throw new IOException("Office could not convert this document to "+format.ToUpperInvariant()+". "+(result.Error+" "+result.Output).Trim());var destination=SafePaths.Unique(outputDirectory,Path.GetFileNameWithoutExtension(original)+"."+(format=="tsv"?"csv":format));File.Move(output,destination);return destination;
+            var output=Path.Combine(rendered,Path.GetFileNameWithoutExtension(input)+"."+(format=="tsv"?"csv":format));if(!File.Exists(output)||new FileInfo(output).Length==0)throw new IOException("Office could not convert this document to "+format.ToUpperInvariant()+". "+(result.Error+" "+result.Output).Trim());var destination=SafePaths.Unique(outputDirectory,SafePaths.SafeStem(Path.GetFileNameWithoutExtension(original))+"."+(format=="tsv"?"csv":format));File.Move(output,destination);return destination;
         }
         finally{if(Directory.Exists(job))Directory.Delete(job,true);}
     }
