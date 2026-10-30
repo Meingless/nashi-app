@@ -140,6 +140,41 @@ cp -- "$input" "$outdir/${name%.*}.$format"
         Check(SystemTools.Find("ffmpeg") is null,"non-executable tools and relative PATH skipped");
         if(OperatingSystem.IsLinux())File.SetUnixFileMode(tool,UnixFileMode.UserRead|UnixFileMode.UserExecute);
         Check(new Toolchain(root).Executable("ffmpeg")==tool,"Linux resolves executables without .exe");
+        if(OperatingSystem.IsLinux())
+        {
+            var brokenBin=Path.Combine(root,"broken-bin");Directory.CreateDirectory(brokenBin);
+            var candidate=Path.Combine(brokenBin,"ffmpeg");
+            File.CreateSymbolicLink(candidate,Path.Combine(root,"removed-ffmpeg"));
+            Environment.SetEnvironmentVariable("PATH",brokenBin+Path.PathSeparator+bin);
+            Check(SystemTools.Find("ffmpeg")==tool,"dangling PATH symlink is skipped for a later executable");
+            Environment.SetEnvironmentVariable("PATH",brokenBin);
+            Check(SystemTools.Find("ffmpeg") is null,"only a dangling PATH symlink means tool unavailable");
+            File.Delete(candidate);File.CreateSymbolicLink(candidate,Path.Combine(root,"removed-venv","ffmpeg"));
+            Environment.SetEnvironmentVariable("PATH",brokenBin+Path.PathSeparator+bin);
+            Check(SystemTools.Find("ffmpeg")==tool,"symlink with missing target directory is skipped");
+            File.Delete(candidate);
+            Check(SystemTools.Find("ffmpeg")==tool,"missing PATH candidate is skipped");
+            File.WriteAllText(candidate,"fixture");File.SetUnixFileMode(candidate,UnixFileMode.UserRead);
+            Check(SystemTools.Find("ffmpeg")==tool,"non-executable PATH candidate is skipped for a later executable");
+            File.Delete(candidate);File.CreateSymbolicLink(candidate,tool);
+            Check(SystemTools.Find("ffmpeg")==candidate,"healthy executable symlink retains PATH precedence");
+            File.Delete(candidate);
+            var restricted=Path.Combine(root,"restricted-tools");Directory.CreateDirectory(restricted);
+            var restrictedTool=Path.Combine(restricted,"ffmpeg");File.Copy(tool,restrictedTool);
+            File.CreateSymbolicLink(candidate,restrictedTool);
+            File.GetUnixFileMode(candidate); // The target is readable before directory access is removed.
+            var directoryMode=File.GetUnixFileMode(restricted);
+            try
+            {
+                File.SetUnixFileMode(restricted,UnixFileMode.None);
+                // Privileged runners may bypass mode bits; do not claim denied-access coverage there.
+                var unreadable=false;
+                try{File.GetUnixFileMode(candidate);}catch(Exception e)when(e is IOException or UnauthorizedAccessException){unreadable=true;}
+                if(unreadable)Check(SystemTools.Find("ffmpeg")==tool,"unreadable symlink target mode is skipped for a later executable");
+                else Console.WriteLine("SKIP denied-access tool lookup: runner can traverse a mode-000 directory");
+            }
+            finally{File.SetUnixFileMode(restricted,directoryMode);}
+        }
     }
     finally{Environment.SetEnvironmentVariable("PATH",oldPath);}
     await Reject(()=>Task.Run(()=>WebDownload.Validate("http://localhost/private")),"web loopback rejected");

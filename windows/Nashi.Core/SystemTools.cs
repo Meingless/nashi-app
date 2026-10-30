@@ -13,7 +13,16 @@ public static class SystemTools
             if(!Path.IsPathFullyQualified(directory))continue;
             var path=Path.Combine(directory,name);
             if(!File.Exists(path))continue;
-            if(OperatingSystem.IsLinux()&&(File.GetUnixFileMode(path)&(UnixFileMode.UserExecute|UnixFileMode.GroupExecute|UnixFileMode.OtherExecute))==0)continue;
+            if(OperatingSystem.IsLinux())
+            {
+                // File.Exists accepts dangling symlinks; the target may also disappear
+                // or become inaccessible before its mode is read. Try the next entry.
+                UnixFileMode mode;
+                try{mode=File.GetUnixFileMode(path);}
+                catch(IOException){continue;}
+                catch(UnauthorizedAccessException){continue;}
+                if((mode&(UnixFileMode.UserExecute|UnixFileMode.GroupExecute|UnixFileMode.OtherExecute))==0)continue;
+            }
             return Path.GetFullPath(path);
         }
         return null;
